@@ -6,7 +6,7 @@ import type {
   MemberExpression, CallExpression,
   TemplateLiteral,
   Identifier, Literal,
-} from 'acorn';
+} from './estree';
 
 function newError(code, message) {
   const err = new Error(message);
