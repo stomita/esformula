@@ -1,0 +1,30 @@
+{
+  "name": "esformula",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "babel -d lib src",
+    "test": "ava"
+  },
+  "dependencies": {
+    "acorn": "^5.5.3"
+  },
+  "devDependencies": {
+    "ava": "^0.25.0",
+    "babel-cli": "^6.26.0",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-flow": "^6.23.0",
+    "flow-bin": "^0.70.0"
+  },
+  "ava": {
+    "babel": "inherit",
+    "require": [
+      "babel-register"
+    ],
+    "files": [
+      "test/**/*.test.js"
+    ]
+  }
+}
