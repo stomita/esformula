@@ -526,3 +526,14 @@ export function parse(formula: string) {
 export function parseTemplate(templateStr: string) {
   return parse(`\`${templateStr}\``);
 }
+
+/**
+ * 
+ */
+export type {
+  Expression, ArrayExpression, ObjectExpression, UnaryExpression, BinaryExpression,
+  LogicalExpression, ConditionalExpression,
+  MemberExpression, CallExpression,
+  TemplateLiteral,
+  Identifier, Literal,
+};
