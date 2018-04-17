@@ -1,3 +1,5 @@
+/* @flow */
+
 // ESTree AST specification is coming from the project: https://github.com/estree/estree
 
 type Node_ = {
