@@ -21,6 +21,7 @@
     "flow-bin": "^0.70.0"
   },
   "files": [
+    ".flowconfig",
     "flow-typed",
     "lib",
     "src"
