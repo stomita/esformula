@@ -366,7 +366,8 @@ export type Identifier = { // Node_ & Expression_ & Pattern_
 
 export type Literal = { // Node_ & Expression_
   type: 'Literal';
-  value?: string | boolean | number | RegExp;
+  value: string | boolean | number | RegExp | null;
+  raw?: string;
   loc?: SourceLocation;
   range?: [number, number];
 }
