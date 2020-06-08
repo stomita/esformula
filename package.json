@@ -4,35 +4,29 @@
   "main": "lib/index.js",
   "license": "MIT",
   "scripts": {
-    "prepare": "npm run build",
-    "build": "npm run build:src && npm run build:flow",
-    "build:src": "babel -d lib src",
-    "build:flow": "flow-copy-source src lib",
-    "test": "ava"
+    "clean": "rimraf lib/*",
+    "build": "npm run build:src && npm run build:types",
+    "build:src": "babel --extensions '.ts' -d lib src",
+    "build:types": "tsc --project ./src/tsconfig.json --declaration --emitDeclarationOnly --outDir lib --rootDir src",
+    "typecheck": "tsc --noEmit",
+    "test": "jest"
   },
   "dependencies": {
-    "acorn": "^5.5.3"
+    "acorn": "^7.2.0"
   },
   "devDependencies": {
-    "ava": "^0.25.0",
-    "babel-cli": "^6.26.0",
-    "babel-plugin-transform-object-rest-spread": "^6.26.0",
-    "babel-preset-env": "^1.6.1",
-    "babel-preset-flow": "^6.23.0",
-    "flow-bin": "^0.70.0",
-    "flow-copy-source": "^1.3.0"
+    "@babel/cli": "^7.10.1",
+    "@babel/core": "^7.10.2",
+    "@babel/preset-env": "^7.10.2",
+    "@babel/preset-typescript": "^7.10.1",
+    "@babel/register": "^7.10.1",
+    "@types/jest": "^25.2.3",
+    "jest": "^26.0.1",
+    "rimraf": "^3.0.2",
+    "typescript": "^3.9.5"
   },
   "files": [
     "lib",
     "src"
-  ],
-  "ava": {
-    "babel": "inherit",
-    "require": [
-      "babel-register"
-    ],
-    "files": [
-      "test/**/*.test.js"
-    ]
-  }
+  ]
 }

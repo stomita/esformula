@@ -1,4 +1,3 @@
-/* @flow */
 import * as acorn from 'acorn';
 import type {
   Expression, ArrayExpression, ObjectExpression, UnaryExpression, BinaryExpression,
@@ -8,36 +7,36 @@ import type {
   Identifier, Literal,
 } from './estree';
 
-function newError(code, message) {
+function newError(code: string, message: string) {
   const err = new Error(message);
   err.name = code;
   return err;
 }
 
-interface ExpressionHandleParams<E: Expression, R, C> {
+interface ExpressionHandleParams<E extends Expression, R, C> {
   expression: E;
   context: C;
   callback(expression: Expression, context: C): R;
 }
 
 interface ExpressionHandler<R, C> {
-  onArrayExpression(ExpressionHandleParams<ArrayExpression, R, C>): R;
-  onObjectExpression(ExpressionHandleParams<ObjectExpression, R, C>): R;
-  onUnaryExpression(ExpressionHandleParams<UnaryExpression, R, C>): R;
-  onBinaryExpression(ExpressionHandleParams<BinaryExpression, R, C>): R;
-  onLogicalExpression(ExpressionHandleParams<LogicalExpression, R, C>): R;
-  onConditionalExpression(ExpressionHandleParams<ConditionalExpression, R, C>): R;
-  onMemberExpression(ExpressionHandleParams<MemberExpression, R, C>): R;
-  onCallExpression(ExpressionHandleParams<CallExpression, R, C>): R;
-  onTemplateLiteral(ExpressionHandleParams<TemplateLiteral, R, C>): R;
-  onIdentifier(ExpressionHandleParams<Identifier, R, C>): R;
-  onLiteral(ExpressionHandleParams<Literal, R, C>): R;
-  onOtherExpression(ExpressionHandleParams<Expression, R, C>): R;
+  onArrayExpression(params: ExpressionHandleParams<ArrayExpression, R, C>): R;
+  onObjectExpression(params: ExpressionHandleParams<ObjectExpression, R, C>): R;
+  onUnaryExpression(params: ExpressionHandleParams<UnaryExpression, R, C>): R;
+  onBinaryExpression(params: ExpressionHandleParams<BinaryExpression, R, C>): R;
+  onLogicalExpression(params: ExpressionHandleParams<LogicalExpression, R, C>): R;
+  onConditionalExpression(params: ExpressionHandleParams<ConditionalExpression, R, C>): R;
+  onMemberExpression(params: ExpressionHandleParams<MemberExpression, R, C>): R;
+  onCallExpression(params: ExpressionHandleParams<CallExpression, R, C>): R;
+  onTemplateLiteral(params: ExpressionHandleParams<TemplateLiteral, R, C>): R;
+  onIdentifier(params: ExpressionHandleParams<Identifier, R, C>): R;
+  onLiteral(params: ExpressionHandleParams<Literal, R, C>): R;
+  onOtherExpression(params: ExpressionHandleParams<Expression, R, C>): R;
 }
 
 function createExpressionHandler<R, C>(
   handler: ExpressionHandler<R, C>,
-): (Expression, C) => R {
+): (expr: Expression, ctx: C) => R {
   const callback = (expression: Expression, context: C): R => {
     switch (expression.type) {
       case 'ArrayExpression':
@@ -174,7 +173,7 @@ const identifierExtractor: ExpressionHandler<string[], void> = {
         return [ ...ids, ...callback(elem.argument, context) ];
       }
       return [ ...ids, ...callback(elem, context) ];
-    }, []);
+    }, [] as ReturnType<typeof callback>);
   },
 
   onObjectExpression({ expression, context, callback }) {
@@ -187,7 +186,7 @@ const identifierExtractor: ExpressionHandler<string[], void> = {
         ...(prop.computed ? callback(prop.key, context) : []),
         ...callback(prop.value, context),
       ];
-    }, []);
+    }, [] as ReturnType<typeof callback>);
   },
 
   onUnaryExpression({ expression, context, callback }) {
@@ -231,7 +230,7 @@ const identifierExtractor: ExpressionHandler<string[], void> = {
           return [ ...ids, ...callback(arg.argument, context) ];
         }
         return [ ...ids, ...callback(arg, context) ];
-      }, []),
+      }, [] as ReturnType<typeof callback>),
     ];
   },
 
@@ -253,7 +252,7 @@ const identifierExtractor: ExpressionHandler<string[], void> = {
     return expression.expressions.reduce((ids, expr) => [
       ...ids,
       ...callback(expr, context),
-    ], []);
+    ], [] as ReturnType<typeof callback>);
   },
 
   onIdentifier({ expression }) {
@@ -294,7 +293,7 @@ const expressionEvaluator: ExpressionHandler<any, EvaluationContext> = {
         return [ ...elems, ...callback(elem.argument, context)];
       }
       return [ ...elems, callback(elem, context)];
-    }, []);
+    }, [] as Array<ReturnType<typeof callback>>);
   },
 
   onObjectExpression({ expression, context, callback }) {
@@ -427,7 +426,7 @@ const expressionEvaluator: ExpressionHandler<any, EvaluationContext> = {
         return [ ...args, ...callback(arg.argument, context) ];
       }
       return [ ...args, callback(arg, context) ];
-    }, []);
+    }, [] as typeof expression.arguments);
     if (callee.type === 'MemberExpression') {
       if (callee.object.type === 'Super') {
         throw newError(
@@ -504,7 +503,7 @@ export function build(expression: Expression) {
   validateExpression(expression);
   return {
     expression,
-    evaluate(context?: { [name: string]: any } = {}) {
+    evaluate(context: { [name: string]: any } = {}) {
       return evaluateExpression(expression, { context });
     },
     identifiers: extractRootIdentifiers(expression),
@@ -515,7 +514,7 @@ export function build(expression: Expression) {
  *
  */
 export function parse(formula: string) {
-  const expression = acorn.parseExpressionAt(formula, 0, { ecmaVersion: 9 });
+  const expression: Expression = acorn.parseExpressionAt(formula, 0, { ecmaVersion: 9 }) as any;
   return build(expression);
 }
 
