@@ -8,7 +8,7 @@
     "build": "npm run build:src",
     "build:src": "babel --extensions '.ts' -d lib src",
     "typecheck": "tsc --noEmit",
-    "test": "ava"
+    "test": "jest"
   },
   "dependencies": {
     "acorn": "^5.5.3"
@@ -19,25 +19,13 @@
     "@babel/preset-env": "^7.10.2",
     "@babel/preset-typescript": "^7.10.1",
     "@babel/register": "^7.10.1",
-    "ava": "^0.25.0",
+    "@types/jest": "^25.2.3",
+    "jest": "^26.0.1",
     "rimraf": "^3.0.2",
     "typescript": "^3.9.5"
   },
   "files": [
     "lib",
     "src"
-  ],
-  "ava": {
-    "babel": "inherit",
-    "compileEnhancements": false,
-    "extensions": [
-      "ts"
-    ],
-    "require": [
-      "@babel/register"
-    ],
-    "files": [
-      "test/**/*.test.ts"
-    ]
-  }
+  ]
 }
