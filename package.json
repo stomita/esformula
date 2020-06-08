@@ -11,7 +11,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "acorn": "^5.5.3"
+    "acorn": "^7.2.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.10.1",
