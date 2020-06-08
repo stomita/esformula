@@ -5,8 +5,9 @@
   "license": "MIT",
   "scripts": {
     "clean": "rimraf lib/*",
-    "build": "npm run build:src",
+    "build": "npm run build:src && npm run build:types",
     "build:src": "babel --extensions '.ts' -d lib src",
+    "build:types": "tsc --project ./src/tsconfig.json --declaration --emitDeclarationOnly --outDir lib --rootDir src",
     "typecheck": "tsc --noEmit",
     "test": "jest"
   },

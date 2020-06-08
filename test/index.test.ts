@@ -68,7 +68,6 @@ describe('esformula', () => {
     assert.ok(parse('a ^ 1').evaluate({ a }) === (a ^ 1)); // eslint-disable-line no-bitwise
     assert.ok(parse('a & 1').evaluate({ a }) === (a & 1)); // eslint-disable-line no-bitwise
     assert.ok(parse('"a" in o').evaluate({ o }) === ('a' in o));
-    // @ts-ignore
     assert.ok(parse('"a" instanceof String').evaluate({ String }) === ('a' instanceof String));
   });
 
