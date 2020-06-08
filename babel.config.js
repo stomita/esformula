@@ -1,18 +1,13 @@
-function getPresetEnvOptions() {
-  if (process.env.BUILD_TARGET === 'module') {
-    return {
-      modules: false,
-      targets: { esmodules: true },
-    };
-  } else {
-    return {};
-  }
-}
-
 module.exports = {
   presets: [
-    ['@babel/env', getPresetEnvOptions()],
+    ['@babel/env',
+      process.env.BUILD_TARGET === 'module'
+        ? {
+            modules: false,
+            targets: { esmodules: true },
+          }
+        : {}
+    ],
     '@babel/typescript',
   ],
-  sourceMap: true,
 };
