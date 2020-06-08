@@ -2,12 +2,15 @@
   "name": "esformula",
   "version": "1.0.7",
   "main": "lib/index.js",
+  "module": "module/index.js",
+  "types": "types/index.d.ts",
   "license": "MIT",
   "scripts": {
-    "clean": "rimraf lib/*",
-    "build": "npm run build:src && npm run build:types",
-    "build:src": "babel --extensions '.ts' -d lib src",
-    "build:types": "tsc --project ./src/tsconfig.json --declaration --emitDeclarationOnly --outDir lib --rootDir src",
+    "clean": "rimraf lib/* module/* types/*",
+    "build": "run-p build:lib build:module build:typedef",
+    "build:lib": "BUILD_TARGET=lib babel --extensions '.ts' --source-maps -d lib src",
+    "build:module": "BUILD_TARGET=module babel --extensions '.ts' --source-maps -d module src",
+    "build:typedef": "tsc --project ./src/tsconfig.json --declaration --emitDeclarationOnly --outDir types --rootDir src",
     "typecheck": "tsc --noEmit",
     "test": "jest"
   },
@@ -22,6 +25,7 @@
     "@babel/register": "^7.10.1",
     "@types/jest": "^25.2.3",
     "jest": "^26.0.1",
+    "npm-run-all": "^4.1.5",
     "rimraf": "^3.0.2",
     "typescript": "^3.9.5"
   },

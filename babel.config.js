@@ -1,4 +1,13 @@
 module.exports = {
-  presets: ['@babel/env', '@babel/typescript'],
-  sourceMap: true,
+  presets: [
+    ['@babel/env',
+      process.env.BUILD_TARGET === 'module'
+        ? {
+            modules: false,
+            targets: { esmodules: true },
+          }
+        : {}
+    ],
+    '@babel/typescript',
+  ],
 };
