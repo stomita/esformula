@@ -1,4 +1,3 @@
-/* @flow */
 import * as acorn from 'acorn';
 import type {
   Expression, ArrayExpression, ObjectExpression, UnaryExpression, BinaryExpression,
@@ -14,30 +13,30 @@ function newError(code, message) {
   return err;
 }
 
-interface ExpressionHandleParams<E: Expression, R, C> {
+interface ExpressionHandleParams<E extends Expression, R, C> {
   expression: E;
   context: C;
   callback(expression: Expression, context: C): R;
 }
 
 interface ExpressionHandler<R, C> {
-  onArrayExpression(ExpressionHandleParams<ArrayExpression, R, C>): R;
-  onObjectExpression(ExpressionHandleParams<ObjectExpression, R, C>): R;
-  onUnaryExpression(ExpressionHandleParams<UnaryExpression, R, C>): R;
-  onBinaryExpression(ExpressionHandleParams<BinaryExpression, R, C>): R;
-  onLogicalExpression(ExpressionHandleParams<LogicalExpression, R, C>): R;
-  onConditionalExpression(ExpressionHandleParams<ConditionalExpression, R, C>): R;
-  onMemberExpression(ExpressionHandleParams<MemberExpression, R, C>): R;
-  onCallExpression(ExpressionHandleParams<CallExpression, R, C>): R;
-  onTemplateLiteral(ExpressionHandleParams<TemplateLiteral, R, C>): R;
-  onIdentifier(ExpressionHandleParams<Identifier, R, C>): R;
-  onLiteral(ExpressionHandleParams<Literal, R, C>): R;
-  onOtherExpression(ExpressionHandleParams<Expression, R, C>): R;
+  onArrayExpression(params: ExpressionHandleParams<ArrayExpression, R, C>): R;
+  onObjectExpression(params: ExpressionHandleParams<ObjectExpression, R, C>): R;
+  onUnaryExpression(params: ExpressionHandleParams<UnaryExpression, R, C>): R;
+  onBinaryExpression(params: ExpressionHandleParams<BinaryExpression, R, C>): R;
+  onLogicalExpression(params: ExpressionHandleParams<LogicalExpression, R, C>): R;
+  onConditionalExpression(params: ExpressionHandleParams<ConditionalExpression, R, C>): R;
+  onMemberExpression(params: ExpressionHandleParams<MemberExpression, R, C>): R;
+  onCallExpression(params: ExpressionHandleParams<CallExpression, R, C>): R;
+  onTemplateLiteral(params: ExpressionHandleParams<TemplateLiteral, R, C>): R;
+  onIdentifier(params: ExpressionHandleParams<Identifier, R, C>): R;
+  onLiteral(params: ExpressionHandleParams<Literal, R, C>): R;
+  onOtherExpression(params: ExpressionHandleParams<Expression, R, C>): R;
 }
 
 function createExpressionHandler<R, C>(
   handler: ExpressionHandler<R, C>,
-): (Expression, C) => R {
+): (expr: Expression, ctx: C) => R {
   const callback = (expression: Expression, context: C): R => {
     switch (expression.type) {
       case 'ArrayExpression':
@@ -504,7 +503,7 @@ export function build(expression: Expression) {
   validateExpression(expression);
   return {
     expression,
-    evaluate(context?: { [name: string]: any } = {}) {
+    evaluate(context: { [name: string]: any } = {}) {
       return evaluateExpression(expression, { context });
     },
     identifiers: extractRootIdentifiers(expression),
