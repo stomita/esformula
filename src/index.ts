@@ -7,7 +7,7 @@ import type {
   Identifier, Literal,
 } from './estree';
 
-function newError(code, message) {
+function newError(code: string, message: string) {
   const err = new Error(message);
   err.name = code;
   return err;
@@ -173,7 +173,7 @@ const identifierExtractor: ExpressionHandler<string[], void> = {
         return [ ...ids, ...callback(elem.argument, context) ];
       }
       return [ ...ids, ...callback(elem, context) ];
-    }, []);
+    }, [] as ReturnType<typeof callback>);
   },
 
   onObjectExpression({ expression, context, callback }) {
@@ -186,7 +186,7 @@ const identifierExtractor: ExpressionHandler<string[], void> = {
         ...(prop.computed ? callback(prop.key, context) : []),
         ...callback(prop.value, context),
       ];
-    }, []);
+    }, [] as ReturnType<typeof callback>);
   },
 
   onUnaryExpression({ expression, context, callback }) {
@@ -230,7 +230,7 @@ const identifierExtractor: ExpressionHandler<string[], void> = {
           return [ ...ids, ...callback(arg.argument, context) ];
         }
         return [ ...ids, ...callback(arg, context) ];
-      }, []),
+      }, [] as ReturnType<typeof callback>),
     ];
   },
 
@@ -252,7 +252,7 @@ const identifierExtractor: ExpressionHandler<string[], void> = {
     return expression.expressions.reduce((ids, expr) => [
       ...ids,
       ...callback(expr, context),
-    ], []);
+    ], [] as ReturnType<typeof callback>);
   },
 
   onIdentifier({ expression }) {
@@ -293,7 +293,7 @@ const expressionEvaluator: ExpressionHandler<any, EvaluationContext> = {
         return [ ...elems, ...callback(elem.argument, context)];
       }
       return [ ...elems, callback(elem, context)];
-    }, []);
+    }, [] as Array<ReturnType<typeof callback>>);
   },
 
   onObjectExpression({ expression, context, callback }) {
@@ -426,7 +426,7 @@ const expressionEvaluator: ExpressionHandler<any, EvaluationContext> = {
         return [ ...args, ...callback(arg.argument, context) ];
       }
       return [ ...args, callback(arg, context) ];
-    }, []);
+    }, [] as typeof expression.arguments);
     if (callee.type === 'MemberExpression') {
       if (callee.object.type === 'Super') {
         throw newError(
@@ -514,7 +514,7 @@ export function build(expression: Expression) {
  *
  */
 export function parse(formula: string) {
-  const expression = acorn.parseExpressionAt(formula, 0, { ecmaVersion: 9 });
+  const expression: Expression = acorn.parseExpressionAt(formula, 0, { ecmaVersion: 9 }) as any;
   return build(expression);
 }
 
