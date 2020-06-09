@@ -1,11 +1,18 @@
-import * as acorn from 'acorn';
+import * as acorn from "acorn";
 import type {
-  Expression, ArrayExpression, ObjectExpression, UnaryExpression, BinaryExpression,
-  LogicalExpression, ConditionalExpression,
-  MemberExpression, CallExpression,
+  Expression,
+  ArrayExpression,
+  ObjectExpression,
+  UnaryExpression,
+  BinaryExpression,
+  LogicalExpression,
+  ConditionalExpression,
+  MemberExpression,
+  CallExpression,
   TemplateLiteral,
-  Identifier, Literal,
-} from './estree';
+  Identifier,
+  Literal,
+} from "./estree";
 
 function newError(code: string, message: string) {
   const err = new Error(message);
@@ -24,8 +31,12 @@ interface ExpressionHandler<R, C> {
   onObjectExpression(params: ExpressionHandleParams<ObjectExpression, R, C>): R;
   onUnaryExpression(params: ExpressionHandleParams<UnaryExpression, R, C>): R;
   onBinaryExpression(params: ExpressionHandleParams<BinaryExpression, R, C>): R;
-  onLogicalExpression(params: ExpressionHandleParams<LogicalExpression, R, C>): R;
-  onConditionalExpression(params: ExpressionHandleParams<ConditionalExpression, R, C>): R;
+  onLogicalExpression(
+    params: ExpressionHandleParams<LogicalExpression, R, C>
+  ): R;
+  onConditionalExpression(
+    params: ExpressionHandleParams<ConditionalExpression, R, C>
+  ): R;
   onMemberExpression(params: ExpressionHandleParams<MemberExpression, R, C>): R;
   onCallExpression(params: ExpressionHandleParams<CallExpression, R, C>): R;
   onTemplateLiteral(params: ExpressionHandleParams<TemplateLiteral, R, C>): R;
@@ -35,31 +46,35 @@ interface ExpressionHandler<R, C> {
 }
 
 function createExpressionHandler<R, C>(
-  handler: ExpressionHandler<R, C>,
+  handler: ExpressionHandler<R, C>
 ): (expr: Expression, ctx: C) => R {
   const callback = (expression: Expression, context: C): R => {
     switch (expression.type) {
-      case 'ArrayExpression':
+      case "ArrayExpression":
         return handler.onArrayExpression({ expression, context, callback });
-      case 'ObjectExpression':
+      case "ObjectExpression":
         return handler.onObjectExpression({ expression, context, callback });
-      case 'UnaryExpression':
+      case "UnaryExpression":
         return handler.onUnaryExpression({ expression, context, callback });
-      case 'BinaryExpression':
+      case "BinaryExpression":
         return handler.onBinaryExpression({ expression, context, callback });
-      case 'LogicalExpression':
+      case "LogicalExpression":
         return handler.onLogicalExpression({ expression, context, callback });
-      case 'ConditionalExpression':
-        return handler.onConditionalExpression({ expression, context, callback });
-      case 'MemberExpression':
+      case "ConditionalExpression":
+        return handler.onConditionalExpression({
+          expression,
+          context,
+          callback,
+        });
+      case "MemberExpression":
         return handler.onMemberExpression({ expression, context, callback });
-      case 'CallExpression':
+      case "CallExpression":
         return handler.onCallExpression({ expression, context, callback });
-      case 'TemplateLiteral':
+      case "TemplateLiteral":
         return handler.onTemplateLiteral({ expression, context, callback });
-      case 'Identifier':
+      case "Identifier":
         return handler.onIdentifier({ expression, context, callback });
-      case 'Literal':
+      case "Literal":
         return handler.onLiteral({ expression, context, callback });
       default:
         return handler.onOtherExpression({ expression, context, callback });
@@ -74,7 +89,7 @@ function createExpressionHandler<R, C>(
 const expressionValidator: ExpressionHandler<void, void> = {
   onArrayExpression({ expression, context, callback }) {
     for (const elem of expression.elements) {
-      if (elem.type === 'SpreadElement') {
+      if (elem.type === "SpreadElement") {
         callback(elem.argument, context);
       } else {
         callback(elem, context);
@@ -84,7 +99,7 @@ const expressionValidator: ExpressionHandler<void, void> = {
 
   onObjectExpression({ expression, context, callback }) {
     for (const prop of expression.properties) {
-      if (prop.type === 'SpreadElement') {
+      if (prop.type === "SpreadElement") {
         callback(prop.argument, context);
       } else {
         callback(prop.key, context);
@@ -115,15 +130,15 @@ const expressionValidator: ExpressionHandler<void, void> = {
 
   onCallExpression({ expression, context, callback }) {
     const { callee, arguments: args } = expression;
-    if (callee.type === 'Super') {
+    if (callee.type === "Super") {
       throw newError(
-        'SUPER_NOT_SUPPORTED',
-        'Super is not supported in the formula',
+        "SUPER_NOT_SUPPORTED",
+        "Super is not supported in the formula"
       );
     }
     callback(callee, context);
     for (const arg of args) {
-      if (arg.type === 'SpreadElement') {
+      if (arg.type === "SpreadElement") {
         callback(arg.argument, context);
       } else {
         callback(arg, context);
@@ -133,10 +148,10 @@ const expressionValidator: ExpressionHandler<void, void> = {
 
   onMemberExpression({ expression, context, callback }) {
     const { object, property } = expression;
-    if (object.type === 'Super') {
+    if (object.type === "Super") {
       throw newError(
-        'SUPER_NOT_SUPPORTED',
-        'Super is not supported in the formula',
+        "SUPER_NOT_SUPPORTED",
+        "Super is not supported in the formula"
       );
     }
     callback(object, context);
@@ -149,14 +164,18 @@ const expressionValidator: ExpressionHandler<void, void> = {
     }
   },
 
-  onIdentifier() {},
+  onIdentifier() {
+    // noop
+  },
 
-  onLiteral() {},
+  onLiteral() {
+    // noop
+  },
 
   onOtherExpression({ expression }) {
     throw newError(
-      'EXPRESSION_NOT_SUPPORTED',
-      `${expression.type} is not supported in the formula`,
+      "EXPRESSION_NOT_SUPPORTED",
+      `${expression.type} is not supported in the formula`
     );
   },
 };
@@ -169,17 +188,17 @@ const validateExpression = createExpressionHandler(expressionValidator);
 const identifierExtractor: ExpressionHandler<string[], void> = {
   onArrayExpression({ expression, context, callback }) {
     return expression.elements.reduce((ids, elem) => {
-      if (elem.type === 'SpreadElement') {
-        return [ ...ids, ...callback(elem.argument, context) ];
+      if (elem.type === "SpreadElement") {
+        return [...ids, ...callback(elem.argument, context)];
       }
-      return [ ...ids, ...callback(elem, context) ];
+      return [...ids, ...callback(elem, context)];
     }, [] as ReturnType<typeof callback>);
   },
 
   onObjectExpression({ expression, context, callback }) {
     return expression.properties.reduce((ids, prop) => {
-      if (prop.type === 'SpreadElement') {
-        return [ ...ids, ...callback(prop.argument, context) ];
+      if (prop.type === "SpreadElement") {
+        return [...ids, ...callback(prop.argument, context)];
       }
       return [
         ...ids,
@@ -217,29 +236,29 @@ const identifierExtractor: ExpressionHandler<string[], void> = {
 
   onCallExpression({ expression, context, callback }) {
     const { callee, arguments: args } = expression;
-    if (callee.type === 'Super') {
+    if (callee.type === "Super") {
       throw newError(
-        'SUPER_NOT_SUPPORTED',
-        'Super is not supported in the formula',
+        "SUPER_NOT_SUPPORTED",
+        "Super is not supported in the formula"
       );
     }
     return [
       ...callback(callee, context),
       ...args.reduce((ids, arg) => {
-        if (arg.type === 'SpreadElement') {
-          return [ ...ids, ...callback(arg.argument, context) ];
+        if (arg.type === "SpreadElement") {
+          return [...ids, ...callback(arg.argument, context)];
         }
-        return [ ...ids, ...callback(arg, context) ];
+        return [...ids, ...callback(arg, context)];
       }, [] as ReturnType<typeof callback>),
     ];
   },
 
   onMemberExpression({ expression, context, callback }) {
     const { object, property, computed } = expression;
-    if (object.type === 'Super') {
+    if (object.type === "Super") {
       throw newError(
-        'SUPER_NOT_SUPPORTED',
-        'Super is not supported in the formula',
+        "SUPER_NOT_SUPPORTED",
+        "Super is not supported in the formula"
       );
     }
     return [
@@ -249,14 +268,14 @@ const identifierExtractor: ExpressionHandler<string[], void> = {
   },
 
   onTemplateLiteral({ expression, context, callback }) {
-    return expression.expressions.reduce((ids, expr) => [
-      ...ids,
-      ...callback(expr, context),
-    ], [] as ReturnType<typeof callback>);
+    return expression.expressions.reduce(
+      (ids, expr) => [...ids, ...callback(expr, context)],
+      [] as ReturnType<typeof callback>
+    );
   },
 
   onIdentifier({ expression }) {
-    return [ expression.name ];
+    return [expression.name];
   },
 
   onLiteral() {
@@ -265,8 +284,8 @@ const identifierExtractor: ExpressionHandler<string[], void> = {
 
   onOtherExpression({ expression }) {
     throw newError(
-      'EXPRESSION_NOT_SUPPORTED',
-      `${expression.type} is not supported in the formula`,
+      "EXPRESSION_NOT_SUPPORTED",
+      `${expression.type} is not supported in the formula`
     );
   },
 };
@@ -282,29 +301,32 @@ function extractRootIdentifiers(expression: Expression): string[] {
  *
  */
 type EvaluationContext = {
-  context: { [name: string]: any },
-  member?: boolean,
+  context: { [name: string]: any };
+  member?: boolean;
 };
 
 const expressionEvaluator: ExpressionHandler<any, EvaluationContext> = {
   onArrayExpression({ expression, context, callback }) {
     return expression.elements.reduce((elems, elem) => {
-      if (elem.type === 'SpreadElement') {
-        return [ ...elems, ...callback(elem.argument, context)];
+      if (elem.type === "SpreadElement") {
+        return [...elems, ...callback(elem.argument, context)];
       }
-      return [ ...elems, callback(elem, context)];
+      return [...elems, callback(elem, context)];
     }, [] as Array<ReturnType<typeof callback>>);
   },
 
   onObjectExpression({ expression, context, callback }) {
     return expression.properties.reduce((obj, prop) => {
-      if (prop.type === 'SpreadElement') {
+      if (prop.type === "SpreadElement") {
         return {
           ...obj,
           ...callback(prop.argument, context),
         };
       }
-      const key = callback(prop.key, prop.computed ? context : { ...context, member: true });
+      const key = callback(
+        prop.key,
+        prop.computed ? context : { ...context, member: true }
+      );
       const value = callback(prop.value, context);
       return { ...obj, [key]: value };
     }, {});
@@ -314,22 +336,22 @@ const expressionEvaluator: ExpressionHandler<any, EvaluationContext> = {
     const argument = callback(expression.argument, context);
     const { operator } = expression;
     switch (operator) {
-      case '-':
+      case "-":
         return -argument;
-      case '+':
+      case "+":
         return +argument;
-      case '!':
+      case "!":
         return !argument;
-      case '~':
+      case "~":
         return ~argument; // eslint-disable-line no-bitwise
-      case 'typeof':
+      case "typeof":
         return typeof argument;
-      case 'void':
+      case "void":
         return undefined;
       default:
         throw newError(
-          'INVALID_OPERATOR',
-          `Invalid UnaryExpression operator: ${operator}`,
+          "INVALID_OPERATOR",
+          `Invalid UnaryExpression operator: ${operator}`
         );
     }
   },
@@ -339,99 +361,103 @@ const expressionEvaluator: ExpressionHandler<any, EvaluationContext> = {
     const right = callback(expression.right, context);
     const { operator } = expression;
     switch (operator) {
-      case '==':
+      case "==":
         return left == right; // eslint-disable-line eqeqeq
-      case '!=':
+      case "!=":
         return left != right; // eslint-disable-line eqeqeq
-      case '===':
+      case "===":
         return left === right;
-      case '!==':
+      case "!==":
         return left !== right;
-      case '<':
+      case "<":
         return left < right;
-      case '<=':
+      case "<=":
         return left <= right;
-      case '>':
+      case ">":
         return left > right;
-      case '>=':
+      case ">=":
         return left >= right;
-      case '<<':
+      case "<<":
         return left << right; // eslint-disable-line no-bitwise
-      case '>>':
+      case ">>":
         return left >> right; // eslint-disable-line no-bitwise
-      case '>>>':
+      case ">>>":
         return left >>> right; // eslint-disable-line no-bitwise
-      case '+':
+      case "+":
         return left + right;
-      case '-':
+      case "-":
         return left - right;
-      case '*':
+      case "*":
         return left * right;
-      case '/':
+      case "/":
         return left / right;
-      case '%':
+      case "%":
         return left % right;
-      case '**':
+      case "**":
         return left ** right;
-      case '|':
+      case "|":
         return left | right; // eslint-disable-line no-bitwise
-      case '^':
+      case "^":
         return left ^ right; // eslint-disable-line no-bitwise
-      case '&':
+      case "&":
         return left & right; // eslint-disable-line no-bitwise
-      case 'in':
+      case "in":
         return left in right;
-      case 'instanceof':
+      case "instanceof":
         return left instanceof right;
       default:
         throw newError(
-          'INVALID_OPERATOR',
-          `Invalid BinaryExpression operator: ${operator}`,
+          "INVALID_OPERATOR",
+          `Invalid BinaryExpression operator: ${operator}`
         );
     }
   },
 
   onLogicalExpression({ expression, context, callback }) {
     switch (expression.operator) {
-      case '&&':
-        return callback(expression.left, context) && callback(expression.right, context);
-      case '||':
-        return callback(expression.left, context) || callback(expression.right, context);
+      case "&&":
+        return (
+          callback(expression.left, context) &&
+          callback(expression.right, context)
+        );
+      case "||":
+        return (
+          callback(expression.left, context) ||
+          callback(expression.right, context)
+        );
       default:
         throw newError(
-          'INVALID_OPERATOR',
-          `Invalid LogicalExpression operator: ${expression.operator}`,
+          "INVALID_OPERATOR",
+          `Invalid LogicalExpression operator: ${expression.operator}`
         );
     }
   },
 
   onConditionalExpression({ expression, context, callback }) {
-    return (
-      callback(expression.test, context) ?
-      callback(expression.consequent, context) :
-      callback(expression.alternate, context)
-    );
+    return callback(expression.test, context)
+      ? callback(expression.consequent, context)
+      : callback(expression.alternate, context);
   },
 
   onCallExpression({ expression, context, callback }) {
     const { callee } = expression;
-    if (callee.type === 'Super') {
+    if (callee.type === "Super") {
       throw newError(
-        'SUPER_NOT_SUPPORTED',
-        'Super is not supported in the formula',
+        "SUPER_NOT_SUPPORTED",
+        "Super is not supported in the formula"
       );
     }
     const args = expression.arguments.reduce((args, arg) => {
-      if (arg.type === 'SpreadElement') {
-        return [ ...args, ...callback(arg.argument, context) ];
+      if (arg.type === "SpreadElement") {
+        return [...args, ...callback(arg.argument, context)];
       }
-      return [ ...args, callback(arg, context) ];
+      return [...args, callback(arg, context)];
     }, [] as typeof expression.arguments);
-    if (callee.type === 'MemberExpression') {
-      if (callee.object.type === 'Super') {
+    if (callee.type === "MemberExpression") {
+      if (callee.object.type === "Super") {
         throw newError(
-          'SUPER_NOT_SUPPORTED',
-          'Super is not supported in the formula',
+          "SUPER_NOT_SUPPORTED",
+          "Super is not supported in the formula"
         );
       }
       const object = callback(callee.object, context);
@@ -444,10 +470,10 @@ const expressionEvaluator: ExpressionHandler<any, EvaluationContext> = {
   },
 
   onMemberExpression({ expression, context, callback }) {
-    if (expression.object.type === 'Super') {
+    if (expression.object.type === "Super") {
       throw newError(
-        'SUPER_NOT_SUPPORTED',
-        'Super is not supported in the formula',
+        "SUPER_NOT_SUPPORTED",
+        "Super is not supported in the formula"
       );
     }
     const object = callback(expression.object, context);
@@ -457,14 +483,18 @@ const expressionEvaluator: ExpressionHandler<any, EvaluationContext> = {
     );
     const ret = object[property];
     // disallow prototype / constructor access
-    if (property === 'prototype' || property === '__proto__' || property === 'constructor') {
+    if (
+      property === "prototype" ||
+      property === "__proto__" ||
+      property === "constructor"
+    ) {
       return undefined;
     }
     return ret;
   },
 
   onTemplateLiteral({ expression, context, callback }) {
-    let str = '';
+    let str = "";
     const { quasis, expressions } = expression;
     for (let i = 0; i < quasis.length; i++) {
       const quasi = expression.quasis[i];
@@ -488,8 +518,8 @@ const expressionEvaluator: ExpressionHandler<any, EvaluationContext> = {
 
   onOtherExpression({ expression }) {
     throw newError(
-      'EXPRESSION_NOT_SUPPORTED',
-      `${expression.type} is not supported in the formula`,
+      "EXPRESSION_NOT_SUPPORTED",
+      `${expression.type} is not supported in the formula`
     );
   },
 };
@@ -514,10 +544,11 @@ export function build(expression: Expression) {
  *
  */
 export function parse(formula: string) {
-  const expression: Expression = acorn.parseExpressionAt(formula, 0, { ecmaVersion: 9 }) as any;
+  const expression: Expression = acorn.parseExpressionAt(formula, 0, {
+    ecmaVersion: 9,
+  }) as any;
   return build(expression);
 }
-
 
 /**
  *
@@ -527,12 +558,19 @@ export function parseTemplate(templateStr: string) {
 }
 
 /**
- * 
+ *
  */
 export type {
-  Expression, ArrayExpression, ObjectExpression, UnaryExpression, BinaryExpression,
-  LogicalExpression, ConditionalExpression,
-  MemberExpression, CallExpression,
+  Expression,
+  ArrayExpression,
+  ObjectExpression,
+  UnaryExpression,
+  BinaryExpression,
+  LogicalExpression,
+  ConditionalExpression,
+  MemberExpression,
+  CallExpression,
   TemplateLiteral,
-  Identifier, Literal,
+  Identifier,
+  Literal,
 };
