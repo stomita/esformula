@@ -1,8 +1,6 @@
 import assert from "assert";
 import { parse } from "../src";
 
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-
 /**
  *
  */
@@ -46,12 +44,10 @@ describe("esformula", () => {
   });
 
   test("binary expression", () => {
-    const a = -2;
+    const a: any = -2;
     const b = undefined;
     const o = { a };
-    // @ts-ignore
     assert.ok(parse('a === "-1"').evaluate({ a }) === (a === "-1"));
-    // @ts-ignore
     assert.ok(parse('a !== "-1"').evaluate({ a }) === (a !== "-1"));
     assert.ok(parse("b == null").evaluate({ b }) === (b == null));
     assert.ok(parse("b != null").evaluate({ b }) === (b != null));
@@ -72,14 +68,16 @@ describe("esformula", () => {
     assert.ok(parse("a ^ 1").evaluate({ a }) === (a ^ 1)); // eslint-disable-line no-bitwise
     assert.ok(parse("a & 1").evaluate({ a }) === (a & 1)); // eslint-disable-line no-bitwise
     assert.ok(parse('"a" in o').evaluate({ o }) === "a" in o);
-    assert.ok(parse('"a" instanceof String').evaluate({ String }) === true);
+    assert.ok(
+      parse('"a" instanceof String').evaluate({ String }) ===
+        ("a" as any) instanceof String
+    );
   });
 
   test("logical expression", () => {
-    const a = 1;
+    const a: any = 1;
     assert.ok(parse("a > 0 && a <= 2").evaluate({ a }) === (a > 0 && a <= 2));
     assert.ok(
-      // @ts-ignore
       parse("a === 0 || a === 1").evaluate({ a }) === (a === 0 || a === 1)
     );
   });
