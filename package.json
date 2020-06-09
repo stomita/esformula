@@ -38,6 +38,8 @@
   },
   "files": [
     "lib",
-    "src"
+    "module",
+    "src",
+    "types"
   ]
 }
