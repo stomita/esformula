@@ -1,4 +1,4 @@
-# esformula
+# esformula [![CircleCI](https://circleci.com/gh/stomita/esformula.svg?style=svg)](https://circleci.com/gh/stomita/esformula)
 
 Evaluate EcmaScript expression safely (without `eval()` call)
 
