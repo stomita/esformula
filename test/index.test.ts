@@ -72,17 +72,14 @@ describe("esformula", () => {
     assert.ok(parse("a ^ 1").evaluate({ a }) === (a ^ 1)); // eslint-disable-line no-bitwise
     assert.ok(parse("a & 1").evaluate({ a }) === (a & 1)); // eslint-disable-line no-bitwise
     assert.ok(parse('"a" in o').evaluate({ o }) === "a" in o);
-    assert.ok(
-      parse('"a" instanceof String').evaluate({ String }) ===
-        "a" instanceof String
-    );
+    assert.ok(parse('"a" instanceof String').evaluate({ String }) === true);
   });
 
   test("logical expression", () => {
     const a = 1;
     assert.ok(parse("a > 0 && a <= 2").evaluate({ a }) === (a > 0 && a <= 2));
-    // @ts-ignore
     assert.ok(
+      // @ts-ignore
       parse("a === 0 || a === 1").evaluate({ a }) === (a === 0 || a === 1)
     );
   });
