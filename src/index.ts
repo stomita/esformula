@@ -560,17 +560,4 @@ export function parseTemplate(templateStr: string) {
 /**
  *
  */
-export type {
-  Expression,
-  ArrayExpression,
-  ObjectExpression,
-  UnaryExpression,
-  BinaryExpression,
-  LogicalExpression,
-  ConditionalExpression,
-  MemberExpression,
-  CallExpression,
-  TemplateLiteral,
-  Identifier,
-  Literal,
-};
+export * from "./estree";
