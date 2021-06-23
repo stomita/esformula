@@ -1,5 +1,6 @@
 import * as acorn from "acorn";
 import type {
+  Node,
   Expression,
   ArrayExpression,
   ObjectExpression,
@@ -13,12 +14,6 @@ import type {
   Identifier,
   Literal,
 } from "estree";
-
-function newError(code: string, message: string) {
-  const err = new Error(message);
-  err.name = code;
-  return err;
-}
 
 interface ExpressionHandleParams<E extends Expression, R, C> {
   expression: E;
@@ -45,6 +40,61 @@ interface ExpressionHandler<R, C> {
   onOtherExpression(params: ExpressionHandleParams<Expression, R, C>): R;
 }
 
+type SupportedExpression = Extract<
+  Expression,
+  {
+    type:
+      | "ArrayExpression"
+      | "ObjectExpression"
+      | "UnaryExpression"
+      | "BinaryExpression"
+      | "LogicalExpression"
+      | "ConditionalExpression"
+      | "MemberExpression"
+      | "CallExpression"
+      | "TemplateLiteral"
+      | "Identifier"
+      | "Literal";
+  }
+>;
+
+/**
+ *
+ */
+function newError(code: string, message: string) {
+  const err = new Error(message);
+  err.name = code;
+  return err;
+}
+
+/**
+ *
+ */
+function assertSupportedExpression(e: Node): asserts e is SupportedExpression {
+  switch (e.type) {
+    case "ArrayExpression":
+    case "ObjectExpression":
+    case "UnaryExpression":
+    case "BinaryExpression":
+    case "LogicalExpression":
+    case "ConditionalExpression":
+    case "MemberExpression":
+    case "CallExpression":
+    case "TemplateLiteral":
+    case "Identifier":
+    case "Literal":
+      return;
+    default:
+      throw newError(
+        "EXPRESSION_NOT_SUPPORTED",
+        `${e.type} is not supported in the formula`
+      );
+  }
+}
+
+/**
+ *
+ */
 function createExpressionHandler<R, C>(
   handler: ExpressionHandler<R, C>
 ): (expr: Expression, ctx: C) => R {
@@ -89,9 +139,9 @@ function createExpressionHandler<R, C>(
 const expressionValidator: ExpressionHandler<void, void> = {
   onArrayExpression({ expression, context, callback }) {
     for (const elem of expression.elements) {
-      if (elem.type === "SpreadElement") {
+      if (elem?.type === "SpreadElement") {
         callback(elem.argument, context);
-      } else {
+      } else if (elem != null) {
         callback(elem, context);
       }
     }
@@ -102,7 +152,9 @@ const expressionValidator: ExpressionHandler<void, void> = {
       if (prop.type === "SpreadElement") {
         callback(prop.argument, context);
       } else {
+        assertSupportedExpression(prop.key);
         callback(prop.key, context);
+        assertSupportedExpression(prop.value);
         callback(prop.value, context);
       }
     }
@@ -130,12 +182,7 @@ const expressionValidator: ExpressionHandler<void, void> = {
 
   onCallExpression({ expression, context, callback }) {
     const { callee, arguments: args } = expression;
-    if (callee.type === "Super") {
-      throw newError(
-        "SUPER_NOT_SUPPORTED",
-        "Super is not supported in the formula"
-      );
-    }
+    assertSupportedExpression(callee);
     callback(callee, context);
     for (const arg of args) {
       if (arg.type === "SpreadElement") {
@@ -148,13 +195,9 @@ const expressionValidator: ExpressionHandler<void, void> = {
 
   onMemberExpression({ expression, context, callback }) {
     const { object, property } = expression;
-    if (object.type === "Super") {
-      throw newError(
-        "SUPER_NOT_SUPPORTED",
-        "Super is not supported in the formula"
-      );
-    }
+    assertSupportedExpression(object);
     callback(object, context);
+    assertSupportedExpression(property);
     callback(property, context);
   },
 
@@ -188,10 +231,12 @@ const validateExpression = createExpressionHandler(expressionValidator);
 const identifierExtractor: ExpressionHandler<string[], void> = {
   onArrayExpression({ expression, context, callback }) {
     return expression.elements.reduce((ids, elem) => {
-      if (elem.type === "SpreadElement") {
+      if (elem?.type === "SpreadElement") {
         return [...ids, ...callback(elem.argument, context)];
+      } else if (elem != null) {
+        return [...ids, ...callback(elem, context)];
       }
-      return [...ids, ...callback(elem, context)];
+      return ids;
     }, [] as ReturnType<typeof callback>);
   },
 
@@ -200,6 +245,8 @@ const identifierExtractor: ExpressionHandler<string[], void> = {
       if (prop.type === "SpreadElement") {
         return [...ids, ...callback(prop.argument, context)];
       }
+      assertSupportedExpression(prop.key);
+      assertSupportedExpression(prop.value);
       return [
         ...ids,
         ...(prop.computed ? callback(prop.key, context) : []),
@@ -236,12 +283,7 @@ const identifierExtractor: ExpressionHandler<string[], void> = {
 
   onCallExpression({ expression, context, callback }) {
     const { callee, arguments: args } = expression;
-    if (callee.type === "Super") {
-      throw newError(
-        "SUPER_NOT_SUPPORTED",
-        "Super is not supported in the formula"
-      );
-    }
+    assertSupportedExpression(callee);
     return [
       ...callback(callee, context),
       ...args.reduce((ids, arg) => {
@@ -255,12 +297,8 @@ const identifierExtractor: ExpressionHandler<string[], void> = {
 
   onMemberExpression({ expression, context, callback }) {
     const { object, property, computed } = expression;
-    if (object.type === "Super") {
-      throw newError(
-        "SUPER_NOT_SUPPORTED",
-        "Super is not supported in the formula"
-      );
-    }
+    assertSupportedExpression(object);
+    assertSupportedExpression(property);
     return [
       ...callback(object, context),
       ...(computed ? callback(property, context) : []),
@@ -308,10 +346,12 @@ type EvaluationContext = {
 const expressionEvaluator: ExpressionHandler<any, EvaluationContext> = {
   onArrayExpression({ expression, context, callback }) {
     return expression.elements.reduce((elems, elem) => {
-      if (elem.type === "SpreadElement") {
+      if (elem?.type === "SpreadElement") {
         return [...elems, ...callback(elem.argument, context)];
+      } else if (elem) {
+        return [...elems, callback(elem, context)];
       }
-      return [...elems, callback(elem, context)];
+      return elems;
     }, [] as Array<ReturnType<typeof callback>>);
   },
 
@@ -323,6 +363,8 @@ const expressionEvaluator: ExpressionHandler<any, EvaluationContext> = {
           ...callback(prop.argument, context),
         };
       }
+      assertSupportedExpression(prop.key);
+      assertSupportedExpression(prop.value);
       const key = callback(
         prop.key,
         prop.computed ? context : { ...context, member: true }
@@ -441,12 +483,7 @@ const expressionEvaluator: ExpressionHandler<any, EvaluationContext> = {
 
   onCallExpression({ expression, context, callback }) {
     const { callee } = expression;
-    if (callee.type === "Super") {
-      throw newError(
-        "SUPER_NOT_SUPPORTED",
-        "Super is not supported in the formula"
-      );
-    }
+    assertSupportedExpression(callee);
     const args = expression.arguments.reduce((args, arg) => {
       if (arg.type === "SpreadElement") {
         return [...args, ...callback(arg.argument, context)];
@@ -454,12 +491,7 @@ const expressionEvaluator: ExpressionHandler<any, EvaluationContext> = {
       return [...args, callback(arg, context)];
     }, [] as typeof expression.arguments);
     if (callee.type === "MemberExpression") {
-      if (callee.object.type === "Super") {
-        throw newError(
-          "SUPER_NOT_SUPPORTED",
-          "Super is not supported in the formula"
-        );
-      }
+      assertSupportedExpression(callee.object);
       const object = callback(callee.object, context);
       const call = callback(callee, context);
       return call.apply(object, args);
@@ -470,13 +502,9 @@ const expressionEvaluator: ExpressionHandler<any, EvaluationContext> = {
   },
 
   onMemberExpression({ expression, context, callback }) {
-    if (expression.object.type === "Super") {
-      throw newError(
-        "SUPER_NOT_SUPPORTED",
-        "Super is not supported in the formula"
-      );
-    }
+    assertSupportedExpression(expression.object);
     const object = callback(expression.object, context);
+    assertSupportedExpression(expression.property);
     const property = callback(
       expression.property,
       expression.computed ? context : { ...context, member: true }
@@ -560,4 +588,18 @@ export function parseTemplate(templateStr: string) {
 /**
  *
  */
-export * from "estree";
+export type {
+  Node,
+  Expression,
+  ArrayExpression,
+  ObjectExpression,
+  UnaryExpression,
+  BinaryExpression,
+  LogicalExpression,
+  ConditionalExpression,
+  MemberExpression,
+  CallExpression,
+  TemplateLiteral,
+  Identifier,
+  Literal,
+};
