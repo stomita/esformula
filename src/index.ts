@@ -12,7 +12,7 @@ import type {
   TemplateLiteral,
   Identifier,
   Literal,
-} from "./estree";
+} from "estree";
 
 function newError(code: string, message: string) {
   const err = new Error(message);
@@ -560,4 +560,4 @@ export function parseTemplate(templateStr: string) {
 /**
  *
  */
-export * from "./estree";
+export * from "estree";
