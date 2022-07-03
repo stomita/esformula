@@ -16,8 +16,8 @@
     "test": "jest"
   },
   "dependencies": {
-    "@types/estree": "^0.0.48",
-    "acorn": "^7.2.0"
+    "@types/estree": "^0.0.52",
+    "acorn": "^8.7.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.14.5",

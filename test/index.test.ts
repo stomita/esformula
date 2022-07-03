@@ -94,25 +94,40 @@ describe("esformula", () => {
     assert.ok(formula != null);
     assert.deepEqual(formula.identifiers.sort(), ["a", "b"].sort());
     assert.ok(formula.evaluate({ a: { foo: 1 }, b: "foo" }) === 1);
+    // property access works as optional chaining is enabled
+    assert.ok(formula.evaluate({ b: "foo" }) === undefined);
 
     formula = parse("a.b");
     assert.ok(formula != null);
     assert.deepEqual(formula.identifiers, ["a"]);
     assert.ok(formula.evaluate({ a: { b: 1 } }) === 1);
+    // property access works as optional chaining is enabled
+    assert.ok(formula.evaluate({}) === undefined);
 
     formula = parse('a.b["c"]');
     assert.ok(formula != null);
     assert.deepEqual(formula.identifiers.sort(), ["a"]);
     assert.ok(formula.evaluate({ a: { b: { c: 1 } } }) === 1);
+    // property access works as optional chaining is enabled
+    assert.ok(formula.evaluate({ a: {} }) === undefined);
   });
 
   test("call expression", () => {
-    const formula = parse("a(b)");
+    let formula = parse("a(b)");
     assert.ok(formula != null);
     assert.deepEqual(formula.identifiers.sort(), ["a", "b"].sort());
     const a = (x: any) => x * x;
     const b = 2;
     assert.ok(formula.evaluate({ a, b }) === a(b));
+    // works as optional chaining is enabled
+    assert.ok(formula.evaluate({ b }) === undefined);
+
+    formula = parse("b.a(2)");
+    assert.ok(formula != null);
+    assert.deepEqual(formula.identifiers, ["b"]);
+    assert.ok(formula.evaluate({ b: { a } }) === a(2));
+    // works as optional chaining is enabled
+    assert.ok(formula.evaluate({}) === undefined);
   });
 
   test("method call expression", () => {
