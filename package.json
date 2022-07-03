@@ -1,6 +1,6 @@
 {
   "name": "esformula",
-  "version": "2.2.1",
+  "version": "3.0.0",
   "main": "lib/index.js",
   "module": "module/index.js",
   "types": "types/index.d.ts",
