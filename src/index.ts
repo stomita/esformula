@@ -126,7 +126,7 @@ interface ExpressionHandler<R, C> {
     params: ExpressionHandleParams<ConditionalExpression, R, C>
   ): R;
   onMemberExpression(params: ExpressionHandleParams<MemberExpression, R, C>): R;
-  onCallExpression(params: ExpressionHandleParams<CallExpression, R, C>): R;
+  onCallExpression(params: ExpressionHandleParams<SimpleCallExpression, R, C>): R;
   onTemplateLiteral(params: ExpressionHandleParams<TemplateLiteral, R, C>): R;
   onIdentifier(params: ExpressionHandleParams<Identifier, R, C>): R;
   onLiteral(params: ExpressionHandleParams<Literal, R, C>): R;
@@ -587,10 +587,10 @@ const expressionEvaluator: ExpressionHandler<any, EvaluationContext> = {
       assertSupportedExpression(callee.object);
       const object = callback(callee.object, context);
       const call = callback(callee, context);
-      return call.apply(object, args);
+      return call?.apply(object, args);
     } else {
       const call = callback(callee, context);
-      return call.apply(context, args);
+      return call?.apply(context, args);
     }
   },
 
@@ -602,7 +602,6 @@ const expressionEvaluator: ExpressionHandler<any, EvaluationContext> = {
       expression.property,
       expression.computed ? context : { ...context, member: true }
     );
-    const ret = object[property];
     // disallow prototype / constructor access
     if (
       property === "prototype" ||
@@ -611,6 +610,7 @@ const expressionEvaluator: ExpressionHandler<any, EvaluationContext> = {
     ) {
       return undefined;
     }
+    const ret = object?.[property];
     return ret;
   },
 
